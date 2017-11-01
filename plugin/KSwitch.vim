@@ -9,8 +9,12 @@
 " This is very much a WIP!
 
 
-" Prevent duplicate loading of this plugin
-if exists("g:loaded_kswitch")
+" Flag to allow reloading of script
+let g:kswitch_debug_mode = 1
+
+" Prevent duplicate loading of this plugin but also make sure we're not in
+" debug mode, so as to prevent changes
+if (exists("g:loaded_kswitch") && g:kswitch_debug_mode == 0)
 	finish
 endif
 
@@ -37,12 +41,14 @@ let g:kswitch_panel_width = 30
 " Where we want our panel to appear when we create it
 let g:kswitch_panel_direction = "right"
 
+nnoremap <F9> :call KSwitch#Toggle()<CR>
+
 
 " === Implementation ===
 
 " Toggles the KSwitch panel between showing / hidden
 func! KSwitch#Toggle()
-	if (s:kswitch_open != 0)
+	if (s:IsKSwitchOpen())
 		call KSwitch#Close()
 	else
 		call KSwitch#Open()
@@ -51,8 +57,7 @@ endfunc
 
 " Closes the KSwitch panel if not already closed
 func! KSwitch#Close()
-	if (s:kswitch_open == 0)
-		" Already closed
+	if (!s:IsKSwitchOpen())
 		return
 	endif
 	execute "bd " . s:kswitch_buffer_name
@@ -61,8 +66,7 @@ endfunc
 
 " Opens the KSwitch panel if not already open
 func! KSwitch#Open()
-	if (s:kswitch_open != 0)
-		" Already open
+	if (s:IsKSwitchOpen())
 		return
 	endif
 
@@ -78,6 +82,7 @@ func! KSwitch#Open()
 				\ | setl buftype=nofile
 				\ | setl filetype=" . s:kswitch_filetype . "
 				\ | setl nowrap
+				\ | setl nonumber | setl nornu
 				\ | vertical resize " . g:kswitch_panel_width
 
 	" Execute doesn't work properly w/ above.. Workaround is to use feedkeys
@@ -94,10 +99,24 @@ func! GetBuffListing()
 	return data
 endfunc
 
-
 " Internal functions that shouldn't be called elsewhere
-func! s:OpenBufferUnderCursor()
-	echo "Not Implemented!"
+func! OpenBufferUnderCursor()
+	let last_buffer = winbufnr(winnr("#"))
+	let current_line = getline(".")
+	let match = matchstr(current_line, "\\d", 0)
+	try
+		let buff_num = str2nr(match)
+
+		" Buffers start at 1, so we if we get anything else its a lie!
+		if (buflisted(buff_num) && buff_num > 0)
+			" Go to previous window and edit buffer
+			silent! call feedkeys("\<C-w>p:b" . buff_num . "\<CR>")
+		else
+			echohl KSplitWarn | echo "Not a valid buffer!" | echohl None
+		endif
+	catch
+			echohl KSplitError | echo "Error: " . v:exception | echohl None
+	endtry
 endfunc
 
 " Helper function that creates the proper command for splitting based on our
@@ -121,12 +140,40 @@ func! s:GetSplitCmd()
 	return split_cmd
 endfunc
 
+" Checks to make sure that we're really open! It's possible we could have been
+" closed, without setting our custom flag
+func! s:IsKSwitchOpen()
+	return buflisted(s:kswitch_buffer_name) && s:kswitch_open != 0
+endfunc
+
+" Sets the special mappings for this
+func! s:SetMappings()
+	map <buffer> <CR> :call OpenBufferUnderCursor() <CR>
+endfunc
+
+" Sets our flag to closed
+func! s:SetClosed()
+	let s:kswitch_open = 0
+endfunc
+
+" Ensures that our window is resized
+func! s:Resize()
+	silent! execute "vertical resize " . g:kswitch_panel_width
+	echo "Resized!"
+endfunc
+
 " === Autocommmand Magic ===
 augroup KSwitch
 	autocmd!
-	execute "autocmd! FileType " . s:kswitch_filetype .
-			\" map <buffer> <CR> :call s:OpenBufferUnderCursor() <CR>"
+	execute "autocmd! FileType " . s:kswitch_filetype . " call s:SetMappings()"
+	execute "autocmd! BufHidden " . s:kswitch_buffer_name . " call s:SetClosed()"
+	execute "autocmd! BufWinEnter " . s:kswitch_buffer_name . " call s:Resize()"
 augroup END
+
+
+" Define custom styles for errors and such
+highlight KSplitWarn term=bold ctermfg=16 ctermbg=221
+highlight KSplitError term=bold ctermfg=16 ctermbg=160
 
 
 " We're finished loading
