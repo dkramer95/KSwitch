@@ -49,11 +49,25 @@ nnoremap <F9> :call KSwitch#Toggle()<CR>
 " Toggles the KSwitch panel between showing / hidden
 func! KSwitch#Toggle()
 	if (s:IsKSwitchOpen())
-		call KSwitch#Close()
+		" Open, but hidden
+		if (s:kswitch_visible == 0)
+			call KSwitch#Unhide()
+		else
+			call KSwitch#Close()
+		endif
 	else
 		call KSwitch#Open()
 	endif
 endfunc
+
+" Unhides the buffer.. Typically used if closed by other means than our own
+" functions
+func! KSwitch#Unhide()
+	let buff_num = bufnr(s:kswitch_buffer_name)
+	execute s:GetSplitCmd() . " sb" . buff_num
+	let s:kswitch_visible = 1
+endfunc
+
 
 " Closes the KSwitch panel if not already closed
 func! KSwitch#Close()
@@ -66,10 +80,6 @@ endfunc
 
 " Opens the KSwitch panel if not already open
 func! KSwitch#Open()
-	if (s:IsKSwitchOpen())
-		return
-	endif
-
 	" Get buffer listing before we create our kswitch buffer since it
 	" shouldn't be visible in the list. Needs to be global to be accessible in
 	" command below
@@ -87,6 +97,7 @@ func! KSwitch#Open()
 
 	" Execute doesn't work properly w/ above.. Workaround is to use feedkeys
 	call feedkeys(cmd . "\<CR>")
+	let s:kswitch_visible = 1
 	let s:kswitch_open = 1
 endfunc
 
@@ -159,14 +170,25 @@ endfunc
 " Ensures that our window is resized
 func! s:Resize()
 	silent! execute "vertical resize " . g:kswitch_panel_width
-	echo "Resized!"
+endfunc
+
+" Sets visible flag to zero, indiciating that we still exist but aren't
+" currently visible
+func! s:SetHidden()
+	let s:kswitch_visible = 0
+endfunc
+
+" Ensures that we are really cleared out
+func! s:Delete()
+	let s:kswitch_open = 0
 endfunc
 
 " === Autocommmand Magic ===
 augroup KSwitch
 	autocmd!
 	execute "autocmd! FileType " . s:kswitch_filetype . " call s:SetMappings()"
-	execute "autocmd! BufHidden " . s:kswitch_buffer_name . " call s:SetClosed()"
+	execute "autocmd! BufHidden " . s:kswitch_buffer_name . " call s:SetHidden()"
+	execute "autocmd! BufDelete " . s:kswitch_buffer_name . " call s:Delete()"
 	execute "autocmd! BufWinEnter " . s:kswitch_buffer_name . " call s:Resize()"
 augroup END
 
