@@ -21,7 +21,7 @@ endif
 " === KSwitch Stuff ===
 
 " Our buffer name
-let s:kswitch_buffer_name = "@kswitch@"
+let s:kswitch_buffer_name = "[kswitch]"
 
 " Do we have our special buffer open?.. Any non-zero value is true
 let s:kswitch_open = 0
@@ -85,6 +85,9 @@ func! KSwitch#Open()
 	" command below
 	let g:kswitch_buffer_list = GetBuffListing()
 
+	" Update how many lines there are in listing
+	let s:kswitch_line_count = GetLineCount(g:kswitch_buffer_list)
+
 	" Magical command that creates and sets up our buffer to the correct state
 	let cmd = ":" . s:GetSplitCmd() . "new " . s:kswitch_buffer_name . "
 				\ | put =g:kswitch_buffer_list
@@ -93,7 +96,7 @@ func! KSwitch#Open()
 				\ | setl filetype=" . s:kswitch_filetype . "
 				\ | setl nowrap
 				\ | setl nonumber | setl nornu
-				\ | vertical resize " . g:kswitch_panel_width
+				\ | ". s:GetResizeCmd() "
 
 	" Execute doesn't work properly w/ above.. Workaround is to use feedkeys
 	call feedkeys(cmd . "\<CR>")
@@ -108,6 +111,13 @@ func! GetBuffListing()
 	silent ls <CR>
 	redir END
 	return data
+endfunc
+
+" Split data by new line and returns the count of lines
+func! GetLineCount(data)
+	let values = split(a:data, "\n")
+	let line_count = len(values)
+	return line_count
 endfunc
 
 " Internal functions that shouldn't be called elsewhere
@@ -140,15 +150,30 @@ func! s:GetSplitCmd()
 	if (direction == "left")
 		let split_cmd = "vert lefta "
 	elseif (direction == "down")
-		echo "Not yet supported"
+		let split_cmd = "below "
 	elseif (direction == "up")
-		echo "Not yet supported"
+		let split_cmd = "lefta "
 	elseif (direction == "right")
 		let split_cmd = "vert rightb "
 	else
 		throw "Invalid direction config!"
 	endif
 	return split_cmd
+endfunc
+
+func! s:GetResizeCmd()
+	let direction = tolower(g:kswitch_panel_direction)
+	let resize_cmd = ""
+
+	" Trailing space on resize_cmd intentional and needed!
+	if (direction == "left" || direction == "right")
+		let resize_cmd = "vertical resize " . g:kswitch_panel_width
+	elseif (direction == "down" || direction == "up")
+		let resize_cmd = "resize " . s:kswitch_line_count
+	else
+		throw "Invalid direction config!"
+	endif
+	return resize_cmd
 endfunc
 
 " Checks to make sure that we're really open! It's possible we could have been
