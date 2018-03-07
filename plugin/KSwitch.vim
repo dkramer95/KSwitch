@@ -1,12 +1,18 @@
 " KSwitch.vim
-" Last Change: 10/31/17
+" Last Change: 03/07/18
 " Maintainer: David Kramer
 " Version: 1.0
 "
 " This plugin allows you view and switch between your open buffers in a
 " side panel interface.
 "
-" This is very much a WIP!
+" This is very much a WIP but basic functionality is working such as being
+" able to navigate in the side panel and hitting <CR> on buffer to open that
+" in the current window
+" ------
+" TODO handle user :quit
+" TODO auto update kswitch listings on WinEnter
+" TODO add thorough docs
 
 
 " Flag to allow reloading of script
@@ -31,6 +37,9 @@ let s:kswitch_filetype = "kswitch"
 
 " Is our side panel visible?
 let s:kswitch_visible = 0
+
+" Buffer number associated with KSwitch that will be assigned on first open
+let s:kswitch_buf_nr = -1
 
 
 " ===Configuration Options===
@@ -63,8 +72,8 @@ endfunc
 " Unhides the buffer.. Typically used if closed by other means than our own
 " functions
 func! KSwitch#Unhide()
-	let buff_num = bufnr(s:kswitch_buffer_name)
-	execute s:GetSplitCmd() . " sb" . buff_num
+	" let buff_num = bufnr(s:kswitch_buffer_name)
+	execute s:GetSplitCmd() . " sb" . s:kswitch_buf_nr
 	let s:kswitch_visible = 1
 endfunc
 
@@ -74,7 +83,7 @@ func! KSwitch#Close()
 	if (!s:IsKSwitchOpen())
 		return
 	endif
-	execute "bd " . s:kswitch_buffer_name
+	execute "bd " . s:kswitch_buf_nr
 	let s:kswitch_open = 0
 endfunc
 
@@ -94,6 +103,7 @@ func! KSwitch#Open()
 				\ | setl nomodifiable
 				\ | setl buftype=nofile
 				\ | setl filetype=" . s:kswitch_filetype . "
+				\ | set nobuflisted
 				\ | setl nowrap
 				\ | setl nonumber | setl nornu
 				\ | ". s:GetResizeCmd() "
@@ -102,6 +112,11 @@ func! KSwitch#Open()
 	call feedkeys(cmd . "\<CR>")
 	let s:kswitch_visible = 1
 	let s:kswitch_open = 1
+
+	if (s:kswitch_buf_nr < 0)
+		" Add 1 to work around fact bufnr('$'') isn't on the kswitch buffer
+		let s:kswitch_buf_nr = bufnr("$") + 1
+	endif
 endfunc
 
 " Returns results from calling ':ls'
@@ -179,12 +194,13 @@ endfunc
 " Checks to make sure that we're really open! It's possible we could have been
 " closed, without setting our custom flag
 func! s:IsKSwitchOpen()
-	return buflisted(s:kswitch_buffer_name) && s:kswitch_open != 0
+	return s:kswitch_open != 0
 endfunc
 
-" Sets the special mappings for this
+" Sets the special mappings for kswitch buffer
 func! s:SetMappings()
 	map <buffer> <CR> :call OpenBufferUnderCursor() <CR>
+	map <buffer> q :call KSwitch#Close() <CR>
 endfunc
 
 " Sets our flag to closed
@@ -197,24 +213,30 @@ func! s:Resize()
 	silent! execute "vertical resize " . g:kswitch_panel_width
 endfunc
 
-" Sets visible flag to zero, indiciating that we still exist but aren't
+" Sets visible flag to zero, indicating that we still exist but aren't
 " currently visible
 func! s:SetHidden()
 	let s:kswitch_visible = 0
+	" let s:kswitch_open = 0
+	call s:Log("KSwitch buffer hidden")
 endfunc
 
 " Ensures that we are really cleared out
 func! s:Delete()
-	let s:kswitch_open = 0
+	call s:Log("s:Delete() => " . bufnr("$"))
+	if (bufnr("$") == s:kswitch_buf_nr)
+		let s:kswitch_open = 0
+		let s:kswitch_buf_nr = -1
+	endif
 endfunc
 
 " === Autocommmand Magic ===
 augroup KSwitch
 	autocmd!
 	execute "autocmd! FileType " . s:kswitch_filetype . " call s:SetMappings()"
-	execute "autocmd! BufHidden " . s:kswitch_buffer_name . " call s:SetHidden()"
-	execute "autocmd! BufDelete " . s:kswitch_buffer_name . " call s:Delete()"
-	execute "autocmd! BufWinEnter " . s:kswitch_buffer_name . " call s:Resize()"
+
+	" execute "autocmd! BufHidden " . s:kswitch_buffer_name . " call s:SetHidden()"
+	" execute "autocmd! BufWinEnter " . s:kswitch_buffer_name . " call s:Resize()"
 augroup END
 
 
