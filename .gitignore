@@ -4,3 +4,6 @@
 
 # annoying temporary os x file
 .DS_Store
+
+# Generated ctags
+tags

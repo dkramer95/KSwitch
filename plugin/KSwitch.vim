@@ -1,15 +1,15 @@
+" ============================================================================
 " KSwitch.vim
-" Last Change: 03/07/18
+" Last Change: 03/08/18
 " Maintainer: David Kramer
 " Version: 1.0
 "
 " This plugin allows you view and switch between your open buffers in a
 " side panel interface.
 "
-" This is very much a WIP but basic functionality is working such as being
-" able to navigate in the side panel and hitting <CR> on buffer to open that
-" in the current window
-
+" ============================================================================
+"
+" SECTION: Script init stuff {{{1
 
 " Flag to allow reloading of script
 let g:kswitch_debug_mode = 0
@@ -20,7 +20,7 @@ if (exists("g:loaded_kswitch") && g:kswitch_debug_mode == 0)
 	finish
 endif
 
-" === KSwitch Stuff ===
+" SECTION: Internal KSwitch Stuff {{{2
 
 " Our buffer name
 let s:kswitch_buffer_name = "[kswitch]"
@@ -37,8 +37,7 @@ let s:kswitch_visible = 0
 " Buffer number associated with KSwitch that will be assigned on first open
 let s:kswitch_buf_nr = -1
 
-
-" ===Configuration Options===
+" SECTION: KSwitch Configuration Variables {{{3
 
 " The width of our side panel
 let g:kswitch_panel_width = 30
@@ -50,11 +49,15 @@ let g:kswitch_panel_direction = "left"
 let g:kswitch_auto_hide = 1
 
 " Mapping to open / close KSwitch
-nnoremap <silent> <F9> :call KSwitch#Toggle()<CR>
+map <F9> :KSwitchToggle<CR>
+
+" SECTION: KSwitch Commands {{{4
+
+command! KSwitchToggle call KSwitch#Toggle()
+command! KSwitchClose call KSwitch#Close()
 
 
-" === Public Functions ===
-
+" SECTION: Public Commands {{{5
 
 " Toggles the KSwitch panel between showing / hidden
 func! KSwitch#Toggle()
@@ -136,7 +139,8 @@ func! KSwitch#Refresh()
 	call s:Refresh()
 endfunc
 
-" === Internal Helper Functions ===
+
+" SECTION: Internal Helper Functions {{{6
 
 " Returns results from calling ':ls'
 func! GetBuffListing()
@@ -316,7 +320,7 @@ func! s:IsCurrentBufferKSwitch()
 endfunc
 
 
-" === Autocommmand Magic ===
+" SECTION: Autocommand Magic {{{7
 
 augroup KSwitch
 	autocmd!
@@ -326,10 +330,13 @@ augroup KSwitch
 augroup END
 
 
+" SECTION: Highlight Styles {{{8
+
 " Define custom styles for errors and such
 highlight KSplitWarn term=bold ctermfg=16 ctermbg=221
 highlight KSplitError term=bold ctermfg=16 ctermbg=160
 
 
+" SECTION: Post Source {{{9
 " We're finished loading
 let g:loaded_kswitch = 1
