@@ -50,10 +50,11 @@ as described below.
 These mappings work while within the KSwitch window.
 
 Default  Description
-q........Hides the KSwitch window
 <CR>.....Opens the selected buffer in the previous window
-v........Creates a vertical split of the selected buffer
+q........Hides the KSwitch window
 s........Creates a horizontal split of the selected buffer
+v........Creates a vertical split of the selected buffer
+x........Closes the selected buffer, only if all changes have been saved
 
 
                                                                *KSwitchToggle*
@@ -75,6 +76,13 @@ change some default behaviors.
 Automatically hide KSwitch after making a selection (split / open)
 
     let g:kswitch_auto_hide = 1
+
+                                          *g:kswitch_close_vim_if_no_buffers*
+                                                        boolean (default: 1)
+
+Automatically close Vim if you close all the buffers listed in KSwitch
+
+    let g:kswitch_close_vim_if_no_buffers = 1
 
                                                         *g:kswitch_panel_width*
                                                          number (default: 30)
