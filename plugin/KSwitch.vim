@@ -47,9 +47,10 @@ let s:kswitch_buf_nr = -1
 let g:kswitch_panel_width = 30
 
 " Where we want our panel to appear when we create it
-let g:kswitch_panel_direction = "right"
+let g:kswitch_panel_direction = "left"
 
-nnoremap <F9> :call KSwitch#Toggle()<CR>
+" Mapping to open / close KSwitch
+nnoremap <silent> <F9> :call KSwitch#Toggle()<CR>
 
 
 " === Public Functions ===
@@ -251,7 +252,7 @@ endfunc
 " Checks to make sure that we're really open! It's possible we could have been
 " closed, without setting our custom flag
 func! s:IsKSwitchOpen()
-	return s:kswitch_open != 0
+	return s:kswitch_open != 0 && s:kswitch_buf_nr > 0
 endfunc
 
 " Sets the special mappings for kswitch buffer
@@ -276,21 +277,15 @@ endfunc
 " Sets visible flag to zero, indicating that we still exist but aren't
 " currently visible
 func! s:SetHidden()
-	let s:kswitch_visible = 0
-endfunc
-
-" Ensures that we are really cleared out
-func! s:Delete()
-	if (bufnr("$") == s:kswitch_buf_nr)
-		let s:kswitch_open = 0
-		let s:kswitch_buf_nr = -1
+	if (s:IsCurrentBufferKSwitch())
+		let s:kswitch_visible = 0
 	endif
 endfunc
 
 " Refreshes the buffer listings in kswitch
 func! s:Refresh()
 	" Ensure we only refresh contents of our kswitch buffer
-	if (&filetype == s:kswitch_filetype)
+	if (s:IsCurrentBufferKSwitch())
 		let kswitch_buffer_list = GetBuffListing()
 
 		" Temporarily allow modifications and clear out existing
@@ -300,7 +295,14 @@ func! s:Refresh()
 		" Add new buffer listings and lock further modifications
 		put =kswitch_buffer_list
 		setl nomodifiable
+
+		call s:Resize()
 	endif
+endfunc
+
+" Returns true if current buffer is of type kswitch
+func! s:IsCurrentBufferKSwitch()
+	return &filetype == s:kswitch_filetype
 endfunc
 
 
@@ -310,9 +312,7 @@ augroup KSwitch
 	autocmd!
 	execute "autocmd! FileType " . s:kswitch_filetype . " call s:SetMappings()"
 	execute "autocmd! WinEnter,BufWinEnter * call s:Refresh()"
-
-	" execute "autocmd! BufHidden " . s:kswitch_buffer_name . " call s:SetHidden()"
-	" execute "autocmd! BufWinEnter " . s:kswitch_buffer_name . " call s:Resize()"
+	execute "autocmd! BufHidden * call s:SetHidden()"
 augroup END
 
 
