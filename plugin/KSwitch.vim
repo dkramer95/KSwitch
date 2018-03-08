@@ -9,13 +9,10 @@
 " This is very much a WIP but basic functionality is working such as being
 " able to navigate in the side panel and hitting <CR> on buffer to open that
 " in the current window
-" ------
-" TODO handle user :quit
-" TODO add thorough docs
 
 
 " Flag to allow reloading of script
-let g:kswitch_debug_mode = 1
+let g:kswitch_debug_mode = 0
 
 " Prevent duplicate loading of this plugin but also make sure we're not in
 " debug mode, so as to prevent changes
