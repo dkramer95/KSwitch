@@ -11,7 +11,6 @@
 " in the current window
 " ------
 " TODO handle user :quit
-" TODO auto update kswitch listings on WinEnter
 " TODO add thorough docs
 
 
@@ -132,6 +131,9 @@ func! KSwitch#VSplitBuff()
 	call VertSplitBufferUnderCursor()
 endfunc
 
+func! KSwitch#Refresh()
+	call s:Refresh()
+endfunc
 
 " === Internal Helper Functions ===
 
@@ -255,9 +257,10 @@ endfunc
 " Sets the special mappings for kswitch buffer
 func! s:SetMappings()
 	map <buffer> <silent> <CR> :call KSwitch#OpenBuff() <CR>
+	map <buffer> <silent> q :call KSwitch#Close() <CR>
+	map <buffer> <silent> r :call KSwitch#Refresh() <CR>
 	map <buffer> <silent> s :call KSwitch#SplitBuff() <CR>
 	map <buffer> <silent> v :call KSwitch#VSplitBuff() <CR>
-	map <buffer> <silent> q :call KSwitch#Close() <CR>
 endfunc
 
 " Sets our flag to closed
@@ -274,16 +277,29 @@ endfunc
 " currently visible
 func! s:SetHidden()
 	let s:kswitch_visible = 0
-	" let s:kswitch_open = 0
-	call s:Log("KSwitch buffer hidden")
 endfunc
 
 " Ensures that we are really cleared out
 func! s:Delete()
-	call s:Log("s:Delete() => " . bufnr("$"))
 	if (bufnr("$") == s:kswitch_buf_nr)
 		let s:kswitch_open = 0
 		let s:kswitch_buf_nr = -1
+	endif
+endfunc
+
+" Refreshes the buffer listings in kswitch
+func! s:Refresh()
+	" Ensure we only refresh contents of our kswitch buffer
+	if (&filetype == s:kswitch_filetype)
+		let kswitch_buffer_list = GetBuffListing()
+
+		" Temporarily allow modifications and clear out existing
+		setl modifiable
+		normal Gdgg
+
+		" Add new buffer listings and lock further modifications
+		put =kswitch_buffer_list
+		setl nomodifiable
 	endif
 endfunc
 
@@ -293,6 +309,7 @@ endfunc
 augroup KSwitch
 	autocmd!
 	execute "autocmd! FileType " . s:kswitch_filetype . " call s:SetMappings()"
+	execute "autocmd! WinEnter,BufWinEnter * call s:Refresh()"
 
 	" execute "autocmd! BufHidden " . s:kswitch_buffer_name . " call s:SetHidden()"
 	" execute "autocmd! BufWinEnter " . s:kswitch_buffer_name . " call s:Resize()"
