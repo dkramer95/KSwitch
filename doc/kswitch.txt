@@ -20,7 +20,7 @@ CONTENTS                                                     *KSwitchContents*
         2.1. KSwitch mappings.................|KSwitchMappings|
     3.Options.................................|KSwitchOptions|
     4.TODO....................................|KSwitchTODO|
-    4.About...................................|KSwitchAbout|
+    5.About...................................|KSwitchAbout|
 
 ==============================================================================
 1. Intro                                                             *KSwitch*
