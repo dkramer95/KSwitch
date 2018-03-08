@@ -20,7 +20,7 @@ if (exists("g:loaded_kswitch") && g:kswitch_debug_mode == 0)
 	finish
 endif
 
-" SECTION: Internal KSwitch Stuff {{{2
+" SECTION: Internal KSwitch Stuff {{{1
 
 " Our buffer name
 let s:kswitch_buffer_name = "[kswitch]"
@@ -37,7 +37,7 @@ let s:kswitch_visible = 0
 " Buffer number associated with KSwitch that will be assigned on first open
 let s:kswitch_buf_nr = -1
 
-" SECTION: KSwitch Configuration Variables {{{3
+" SECTION: KSwitch Configuration Variables {{{1
 
 " The width of our side panel
 let g:kswitch_panel_width = 30
@@ -54,13 +54,13 @@ let g:kswitch_close_vim_if_no_buffers = 1
 " Mapping to open / close KSwitch
 map <F9> :KSwitchToggle<CR>
 
-" SECTION: KSwitch Commands {{{4
+" SECTION: KSwitch Commands {{{1
 
 command! KSwitchToggle call KSwitch#Toggle()
 command! KSwitchClose call KSwitch#Close()
 
 
-" SECTION: Public Commands {{{5
+" SECTION: Public Commands {{{6
 
 " Toggles the KSwitch panel between showing / hidden
 func! KSwitch#Toggle()
@@ -147,7 +147,7 @@ func! KSwitch#Refresh()
 endfunc
 
 
-" SECTION: Internal Helper Functions {{{6
+" SECTION: Internal Helper Functions {{{1
 
 " Returns results from calling ':ls'
 func! GetBuffListing()
@@ -351,7 +351,7 @@ func! s:IsCurrentBufferKSwitch()
 endfunc
 
 
-" SECTION: Autocommand Magic {{{7
+" SECTION: Autocommand Magic {{{1
 
 augroup KSwitch
 	autocmd!
@@ -361,13 +361,15 @@ augroup KSwitch
 augroup END
 
 
-" SECTION: Highlight Styles {{{8
+" SECTION: Highlight Styles {{{1
 
 " Define custom styles for errors and such
 highlight KSplitWarn term=bold ctermfg=16 ctermbg=221
 highlight KSplitError term=bold ctermfg=16 ctermbg=160
 
 
-" SECTION: Post Source {{{9
+" SECTION: Post Source {{{1
 " We're finished loading
 let g:loaded_kswitch = 1
+
+" vim: set sw=4 sts=4 et fdm=marker:
