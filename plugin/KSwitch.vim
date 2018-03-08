@@ -53,7 +53,8 @@ let g:kswitch_panel_direction = "right"
 nnoremap <F9> :call KSwitch#Toggle()<CR>
 
 
-" === Implementation ===
+" === Public Functions ===
+
 
 " Toggles the KSwitch panel between showing / hidden
 func! KSwitch#Toggle()
@@ -119,6 +120,21 @@ func! KSwitch#Open()
 	endif
 endfunc
 
+func! KSwitch#OpenBuff()
+	call OpenBufferUnderCursor()
+endfunc
+
+func! KSwitch#SplitBuff()
+	call SplitBufferUnderCursor()
+endfunc
+
+func! KSwitch#VSplitBuff()
+	call VertSplitBufferUnderCursor()
+endfunc
+
+
+" === Internal Helper Functions ===
+
 " Returns results from calling ':ls'
 func! GetBuffListing()
 	let data = ""
@@ -153,6 +169,45 @@ func! OpenBufferUnderCursor()
 	catch
 			echohl KSplitError | echo "Error: " . v:exception | echohl None
 	endtry
+endfunc
+
+
+" Create a split of the buffer that is under cursor in kswitch
+func! SplitBufferUnderCursor()
+	let buff_num = GetBufferNumUnderCursor()
+	if (buff_num > 0)
+		" Move to previous window, then split
+		call feedkeys("\<C-w>p :split #" . buff_num . "\<CR>")
+	endif
+endfunc
+
+" Create a vertical split of the buffer that is under cursor in kswitch
+func! VertSplitBufferUnderCursor()
+	let buff_num = GetBufferNumUnderCursor()
+	if (buff_num > 0)
+		" Move to previous window, then vsplit
+		call feedkeys("\<C-w>p :vsplit #" . buff_num . "\<CR>")
+	endif
+endfunc
+
+" Returns the buffer number that is under the cursor. If cursor is not on
+" a buffer (i.e. empty line), it returns -1
+func! GetBufferNumUnderCursor()
+	let last_buffer = winbufnr(winnr("#"))
+	let current_line = getline(".")
+	let match = matchstr(current_line, "\\d", 0)
+	let buff_num = -1
+
+	try
+		let buff_num = str2nr(match)
+		" Ensure buff_num is valid and exists
+		if (!buflisted(buff_num) || buff_num <= 0)
+			buff_num = -1
+		endif
+	catch
+		" Silently ignore since error just indicates non-existent buffer
+	endtry
+	return buff_num
 endfunc
 
 " Helper function that creates the proper command for splitting based on our
@@ -199,8 +254,10 @@ endfunc
 
 " Sets the special mappings for kswitch buffer
 func! s:SetMappings()
-	map <buffer> <CR> :call OpenBufferUnderCursor() <CR>
-	map <buffer> q :call KSwitch#Close() <CR>
+	map <buffer> <silent> <CR> :call KSwitch#OpenBuff() <CR>
+	map <buffer> <silent> s :call KSwitch#SplitBuff() <CR>
+	map <buffer> <silent> v :call KSwitch#VSplitBuff() <CR>
+	map <buffer> <silent> q :call KSwitch#Close() <CR>
 endfunc
 
 " Sets our flag to closed
@@ -230,7 +287,9 @@ func! s:Delete()
 	endif
 endfunc
 
+
 " === Autocommmand Magic ===
+
 augroup KSwitch
 	autocmd!
 	execute "autocmd! FileType " . s:kswitch_filetype . " call s:SetMappings()"
