@@ -1,0 +1,6 @@
+# VIM: Swap-files
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+
+# annoying temporary os x file
+.DS_Store
