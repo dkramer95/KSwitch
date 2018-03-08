@@ -48,6 +48,9 @@ let g:kswitch_panel_direction = "left"
 " Dismiss kswitch after a selection has been made?
 let g:kswitch_auto_hide = 1
 
+" Close out vim if all buffers have been closed
+let g:kswitch_close_vim_if_no_buffers = 1
+
 " Mapping to open / close KSwitch
 map <F9> :KSwitchToggle<CR>
 
@@ -135,6 +138,10 @@ func! KSwitch#VSplitBuff()
 	call VertSplitBufferUnderCursor()
 endfunc
 
+func! KSwitch#CloseBuff()
+	call CloseBufferUnderCursor()
+endfunc
+
 func! KSwitch#Refresh()
 	call s:Refresh()
 endfunc
@@ -182,21 +189,40 @@ endfunc
 
 " Create a split of the buffer that is under cursor in kswitch
 func! SplitBufferUnderCursor()
-	let buff_num = GetBufferNumUnderCursor()
-	if (buff_num > 0)
-		" Move to previous window, then split
-		call feedkeys("\<C-w>p :split #" . buff_num . "\<CR>")
-		call s:AutoDismiss()
-	endif
+	call s:SplitBufferUnderCursor("split")
 endfunc
 
 " Create a vertical split of the buffer that is under cursor in kswitch
 func! VertSplitBufferUnderCursor()
+	call s:SplitBufferUnderCursor("vsplit")
+endfunc
+
+" Splits buffer under cursor w/ specified splitType: 'split' or 'vsplit'
+func! s:SplitBufferUnderCursor(splitType)
 	let buff_num = GetBufferNumUnderCursor()
-	if (buff_num > 0)
+	if (buflisted(buff_num))
 		" Move to previous window, then vsplit
-		call feedkeys("\<C-w>p :vsplit #" . buff_num . "\<CR>")
+		call feedkeys("\<C-w>p :" . a:splitType . " #" . buff_num . "\<CR>")
 		call s:AutoDismiss()
+	endif
+endfunc
+
+" Closes the buffer that is under cursor in kswitch
+func! CloseBufferUnderCursor()
+	let buff_num = GetBufferNumUnderCursor()
+	if (buflisted(buff_num))
+		try
+			execute "bd" . buff_num
+			call s:Refresh()
+		catch /^Vim\%((\a\+)\)\=:E89/
+			let buff_name = bufname(buff_num)
+			let msg = "Unable to close [" . buff_name . "] due to unsaved changes!"
+			echohl KSplitWarn | echo msg | echohl None
+		endtry
+		" If we close all the buffers, quit vim
+		if (g:kswitch_close_vim_if_no_buffers != 0 && GetBuffListing() == "")
+			call s:QuitVim()
+		endif
 	endif
 endfunc
 
@@ -218,6 +244,10 @@ func! GetBufferNumUnderCursor()
 		" Silently ignore since error just indicates non-existent buffer
 	endtry
 	return buff_num
+endfunc
+
+func! s:QuitVim()
+	call feedkeys(":q\<CR>")
 endfunc
 
 " Auto close kswitch if that option is set
@@ -276,6 +306,7 @@ func! s:SetMappings()
 	map <buffer> <silent> r :call KSwitch#Refresh() <CR>
 	map <buffer> <silent> s :call KSwitch#SplitBuff() <CR>
 	map <buffer> <silent> v :call KSwitch#VSplitBuff() <CR>
+	map <buffer> <silent> x :call KSwitch#CloseBuff() <CR>
 endfunc
 
 " Sets our flag to closed
