@@ -49,6 +49,9 @@ let g:kswitch_panel_width = 30
 " Where we want our panel to appear when we create it
 let g:kswitch_panel_direction = "left"
 
+" Dismiss kswitch after a selection has been made?
+let g:kswitch_auto_hide = 1
+
 " Mapping to open / close KSwitch
 nnoremap <silent> <F9> :call KSwitch#Toggle()<CR>
 
@@ -166,6 +169,7 @@ func! OpenBufferUnderCursor()
 		if (buflisted(buff_num) && buff_num > 0)
 			" Go to previous window and edit buffer
 			silent! call feedkeys("\<C-w>p:b" . buff_num . "\<CR>")
+			call s:AutoDismiss()
 		else
 			echohl KSplitWarn | echo "Not a valid buffer!" | echohl None
 		endif
@@ -181,6 +185,7 @@ func! SplitBufferUnderCursor()
 	if (buff_num > 0)
 		" Move to previous window, then split
 		call feedkeys("\<C-w>p :split #" . buff_num . "\<CR>")
+		call s:AutoDismiss()
 	endif
 endfunc
 
@@ -190,6 +195,7 @@ func! VertSplitBufferUnderCursor()
 	if (buff_num > 0)
 		" Move to previous window, then vsplit
 		call feedkeys("\<C-w>p :vsplit #" . buff_num . "\<CR>")
+		call s:AutoDismiss()
 	endif
 endfunc
 
@@ -211,6 +217,13 @@ func! GetBufferNumUnderCursor()
 		" Silently ignore since error just indicates non-existent buffer
 	endtry
 	return buff_num
+endfunc
+
+" Auto close kswitch if that option is set
+func! s:AutoDismiss()
+	if (g:kswitch_auto_hide != 0)
+		call KSwitch#Close()
+	endif
 endfunc
 
 " Helper function that creates the proper command for splitting based on our
