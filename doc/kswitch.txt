@@ -1,0 +1,125 @@
+*kswitch.txt*   A buffer switching plugin for Vim!
+
+
+ 
+                  _  __ _____         _ _       _                            ~
+                 | |/ // ____|       (_) |     | |                           ~
+                 | ' /| (_____      ___| |_ ___| |__                         ~
+                 |  <  \___ \ \ /\ / / | __/ __| '_ \                        ~
+                 | . \ ____) \ V  V /| | || (__| | | |                       ~
+                 |_|\_\_____/ \_/\_/ |_|\__\___|_| |_|                       ~
+ 
+                            by: David Kramer
+
+
+==============================================================================
+CONTENTS                                                     *KSwitchContents*
+
+    1.Intro...................................|KSwitch|
+    2.Features................................|KSwitchFeatures|
+        2.1. KSwitch mappings.................|KSwitchMappings|
+    3.Options.................................|KSwitchOptions|
+    4.TODO....................................|KSwitchTODO|
+    4.About...................................|KSwitchAbout|
+
+==============================================================================
+1. Intro                                                             *KSwitch*
+
+KSwitch is a plugin that makes it easier to switch between buffers in vim.
+Traditionally you would type ':ls' to see a list and then have to issue another
+command to switch to a particular buffer, e.g. ':b1'.
+
+KSwitch provides a toggle that opens up an unlisted buffer, showing all buffers
+in the active session. You can then use standard vim movement commands to
+navigate to the desired buffer.
+
+
+==============================================================================
+2. Features                                                  *KSwitchFeatures*
+
+Basic usage of KSwitch opens up a split window showing a list of all buffers in
+your current session, with the cursor pointed at the buffer you were in right
+before opening KSwitch.
+
+KSwitch includes special mappings that make common operations more streamlined
+as described below.
+
+------------------------------------------------------------------------------
+2.1. KSwitch Mappings                                        *KSwitchMappings*
+
+These mappings work while within the KSwitch window.
+
+Default  Description
+q........Hides the KSwitch window
+<CR>.....Opens the selected buffer in the previous window
+v........Creates a vertical split of the selected buffer
+s........Creates a horizontal split of the selected buffer
+
+
+                                                               *KSwitchToggle*
+
+Default mapping to toggle KSwitch
+
+    nnoremap <silent> <F9> :call KSwitch#Toggle()<CR>
+
+
+==============================================================================
+3. Options                                                    *KSwitchOptions*
+
+Options right now are pretty basic. Below is a list of variables you can set to
+change some default behaviors.
+
+                                                         *g:kswitch_auto_hide*
+                                                        boolean (default: 1)
+
+Automatically hide KSwitch after making a selection (split / open)
+
+    let g:kswitch_auto_hide = 1
+
+                                                        *g:kswitch_panel_width*
+                                                         number (default: 30)
+
+Specify width of KSwitch window
+
+    let g:kswitch_panel_width = 30
+
+                                                    *g:kswitch_panel_direction*
+                                                     string (default: "left")
+
+Specify direction that KSwitch will appear when toggled
+
+    let g:kswitch_panel_direction = "left"
+
+    * Supported options: "left", "down", "up", or "right" *
+
+                                                        *g:kswitch_debug_mode*
+                                                        boolean (default: 0)
+
+For development use only, just allows plugin to be reloaded again
+
+    let g:kswitch_debug_mode = 0
+
+==============================================================================
+4. TODO                                                          *KSwitchTODO*
+
+* Automatic Numeric Mappings
+        - Mappings auto generated based on buffer number to open / split
+          directly
+
+* Buffer preview
+        - See buffer contents as you scroll through listing
+
+==============================================================================
+5. About                                                        *KSwitchAbout*
+
+Author: David Kramer
+
+As I am a huge fan of Vim, I wanted to see what would entail in writing a plugin
+that solved a problem for me that could also benefit others as well.
+
+This included learning how to setup a documentation file, complete with handy
+tags for easy navigation.
+
+
+* This plugin can be found on github at
+    http://github.com/dkramer95/KSwitch
