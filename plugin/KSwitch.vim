@@ -1,6 +1,6 @@
 " ============================================================================
 " KSwitch.vim
-" Last Change: 03/08/18
+" Last Change: 04/22/18
 " Maintainer: David Kramer
 " Version: 1.0
 "
@@ -154,7 +154,7 @@ endfunc
 func! GetBuffListing()
     let data = ""
     redir => data
-    silent ls <CR>
+    silent ls
     redir END
     return data
 endfunc
